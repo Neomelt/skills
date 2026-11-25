@@ -69,4 +69,4 @@ echo "   1. 编辑 $TARGET_DIR/SKILL.md 填入真实步骤与踩坑记录"
 if [[ "$CATEGORY" != "private" ]]; then
   echo "   2. 同步更新 README.md、skills.sh.json 与 CHANGELOG.md"
 fi
-echo "   3. 运行 ./scripts/sync.sh 校验并挂载到 OpenCode / Claude Code / Codex"
+echo "   3. 运行 ./scripts/sync.sh 校验并自动挂载到 Antigravity / OpenCode / Claude / Codex / Cursor 等已安装 Agent"

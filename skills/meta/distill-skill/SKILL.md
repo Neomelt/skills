@@ -1,15 +1,15 @@
 ---
 name: distill-skill
-description: 将实际工作、学习或生活中的解决方案、排障经验、复盘方法论提炼沉淀为标准 Agent Skill，归档到 ~/skills 个人技能仓库并同步到本机 OpenCode、Claude Code 与 Codex。当用户要求把刚做完的事总结成 skill、沉淀工作流到技能库、或新增与迭代 ~/skills 中的个人技能时使用；仅调用其他现成技能完成普通任务时不使用。
+description: 将实际工作、学习或生活中的解决方案、排障经验、复盘方法论提炼沉淀为标准 Agent Skill，归档到 ~/skills 个人技能仓库并自动适配同步到 Antigravity、Gemini CLI、OpenCode、Claude Code、Codex、Cursor 等本机主流 Agent。当用户要求把刚做完的事总结成 skill、沉淀工作流到技能库、或新增与迭代 ~/skills 中的个人技能时使用；仅调用其他现成技能完成普通任务时不使用。
 license: MIT
 metadata:
   author: Neomelt
-  version: "0.1.0"
+  version: "0.2.0"
 ---
 
 # Distill Skill（个人经验提炼与技能归档）
 
-将真实任务中跑通的步骤、纠错结论、领域上下文提炼为高信噪比的标准 Skill，归入 `~/skills` 并同步到本机所有 Agent。
+将真实任务中跑通的步骤、纠错结论、领域上下文提炼为高信噪比的标准 Skill，归入 `~/skills` 并自动同步到本机已安装的各主流 Agent。
 
 ## 核心原则
 
@@ -20,9 +20,13 @@ metadata:
    - `~/skills` 绑定了 **GitHub 公开仓库（`Neomelt/skills`）**。
    - 归入 `skills/{meta,work,study,life}/` 前，**必须清查并脱敏**一切密钥、Token、密码、私人服务器 IP/内网域名、学号/手机号、私人账号路径等敏感信息，统一替换为环境变量或清晰占位符。
    - 若某个技能高度依赖不便公开的私人环境信息，直接将其归入 Git 自动忽略的 `~/skills/private/` 目录——照常享受本机全 Agent 软链接同步，但绝不进入版本库。
-3. **动态对齐最新规范**：
-   - 对 `SKILL.md` 字段、渐进式披露或打包格式拿不准时，先拉取 `https://agentskills.io/llms.txt` 及其指向的 `specification.md` 核实，不凭旧印象硬写。
-   - 跨客户端兼容约束：`name` 必须与目录名完全一致（仅小写字母、数字、单连字符，`<=64` 字符）；`description` 必须同时写清**做什么**与**何时触发**（`<=1024` 字符），且**不要出现英文尖括号 `<` 或 `>`**（兼容 Codex 严格校验器）。
+3. **全主流 Agent 最大公约数兼容**：
+   - 对 `SKILL.md` 格式规范拿不准时，先拉取 `https://agentskills.io/llms.txt` 及 `specification.md` 核实；遇到特定客户端发现路径或语法差异时，查阅 [references/agent-compatibility.md](references/agent-compatibility.md)。
+   - 硬约束：
+     - Frontmatter 顶层仅使用跨端通用五字段：`name`、`description`、`license`、`metadata`、`allowed-tools`（避免 `context: fork` 等单一客户端私有字段导致严格校验器报错）。
+     - `name` 必须与目录名完全一致（仅小写字母、数字、单连字符，`<=64` 字符）。
+     - `description` 必须同时写清**做什么**与**何时触发**（`<=1024` 字符），且**不含英文尖括号 `<` 或 `>`**（兼容 Codex 严格校验器）。
+     - 正文保持客户端中立，不把 `@skill`、`/skill`、`$skill` 等单一客户端召唤语法写成唯一入口；内部文件统一用相对 `SKILL.md` 目录的相对路径引用。
 
 ## 提炼与入库工作流
 
@@ -55,8 +59,8 @@ metadata:
     2. `skills.sh.json` 对应分组的 `skills` 数组
     3. `CHANGELOG.md`（新增标 `0.1.0`，行为变更 bump `metadata.version` 的 minor，微调 bump patch）
 
-- [ ] **5. 校验并同步到本机全部 Agent**
-  - 运行仓库同步脚本完成格式校验与多端软链接挂载（OpenCode / Claude Code / Codex）：
+- [ ] **5. 校验并同步到本机全部已安装 Agent**
+  - 运行仓库同步脚本完成跨端格式校验与自动检测挂载（Antigravity、Gemini CLI、OpenCode、Claude Code、Codex、Cursor、Copilot、Pi、Qoder、Junie 等）：
     ```bash
     ~/skills/scripts/sync.sh
     ```
@@ -64,4 +68,4 @@ metadata:
 
 - [ ] **6. 汇报结果并等待 Git 授权**
   - 向用户展示新建/修改的技能路径、核心要点及脱敏检查结果。
-  - **未经用户在当次对话明确要求，不自动执行 `git commit` 或 `git push`**。
+  - **未经用户在当次对话明确要求，不自动执行 `git commit` 或 `git push`**；获准提交时遵循 `AGENTS.md` 中的英文 Conventional Commits 规范。

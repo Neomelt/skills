@@ -8,7 +8,7 @@
 
 设计目标只有两个：
 1. **经验不随单次对话归零**：把真正踩过的坑、跑通的链路和个人偏好固化成可复用的 `SKILL.md`，让后续任务直接站在前一次的结论上起步。
-2. **一次沉淀，全端互通**：严格遵循 [agentskills.io](https://agentskills.io) 开放规范，同时兼容本机 **OpenCode**、**Claude Code** 与 **Codex**，并支持跨设备通过 `skills` CLI 按需拉取。
+2. **一次沉淀，全端互通**：严格遵循 [agentskills.io](https://agentskills.io) 开放规范与跨端最大公约数约束，自动检测并适配挂载 **Antigravity、Gemini CLI、OpenCode、Claude Code、Codex、Cursor、Windsurf、GitHub Copilot、Pi、Trae、Qoder、Junie** 等主流 Agent，同时支持通过 `skills` CLI 跨设备按需拉取。
 
 ---
 
@@ -16,7 +16,7 @@
 
 | 分类 | Skill | 用途 |
 |---|---|---|
-| `meta/` | [`distill-skill`](skills/meta/distill-skill/) | 经验提炼与归档元技能：把刚跑通的方案、排障记录或方法论提炼为标准 Skill，自动完成脱敏检查、索引联动与多端同步 |
+| `meta/` | [`distill-skill`](skills/meta/distill-skill/) | 经验提炼与归档元技能：把刚跑通的方案、排障记录或方法论提炼为标准 Skill，自动完成脱敏检查、索引联动与全主流 Agent 同步 |
 | `work/` | *持续沉淀中* | 软件工程、嵌入式 / Rust / Python / Web 开发规范、排障流程与自动化工具链 |
 | `study/` | *持续沉淀中* | 课程复习、论文精读、概念拆解、实验复现与学术写作 |
 | `life/` | *持续沉淀中* | 个人规划、阅读笔记、音乐制作与日常效率工作流 |
@@ -25,11 +25,29 @@
 
 ---
 
+## 已适配的主流 Agent 矩阵
+
+`./scripts/sync.sh` 内置 27 个主流 Agent 适配器，运行时会自动检测本机已安装的客户端并挂载软链接（未安装的自动跳过，不污染家目录）：
+
+| Agent / 生态 | 全局挂载路径 | 说明 |
+|---|---|---|
+| **Google Antigravity / AGY CLI** | `~/.gemini/config/skills/` | Antigravity IDE / `agy` 全局仅扫描该目录，不读 `~/.agents/skills/` |
+| **Gemini CLI** | `~/.gemini/skills/` | 配合仓库根目录 `GEMINI.md` 规则入口 |
+| **OpenCode** | `~/.config/opencode/skills/` | 同时兼容 `~/.agents/skills/`，支持 `@skill-id` 点名 |
+| **Claude Code** | `~/.claude/skills/` | 配合 `CLAUDE.md`，支持 `/skill-id` 斜杠调用 |
+| **OpenAI Codex** | `~/.codex/skills/` | 同时兼容 `~/.agents/skills/`，支持 `$skill-id` 点名 |
+| **Universal 通用组** | `~/.agents/skills/` | 原生覆盖 **Pi、Cline、Kimi Code CLI、Warp、Zed、Droid** 等 |
+| **AI IDE 与插件生态** | 各自全局 `skills/` 目录 | 自动检测支持 **Cursor、Windsurf、GitHub Copilot、Trae / Trae CN、Qoder / Qoder CN、JetBrains Junie、Roo Code、Kilo Code、Kiro CLI、Continue、Qwen Code、通义灵码、CodeBuddy、Goose、Amp、OpenHands、OpenClaw、Augment、Crush** |
+
+完整跨端差异与编写规范详见 [`agent-compatibility.md`](skills/meta/distill-skill/references/agent-compatibility.md)。
+
+---
+
 ## 快速上手
 
-### 1. 本机多 Agent 实时接入（推荐开发/主力机使用）
+### 1. 本机多 Agent 实时接入（主力开发机推荐）
 
-克隆仓库后运行同步脚本，会自动校验所有 `SKILL.md` 并通过符号链接挂载到 `~/.agents/skills`（OpenCode / 通用规范）、`~/.claude/skills`（Claude Code）与 `~/.codex/skills`（Codex），后续修改即时生效：
+克隆仓库后运行同步脚本，会自动完成跨端格式校验、检测本机已安装的全部 Agent 并建立符号链接，后续修改即时生效：
 
 ```bash
 git clone git@github.com:Neomelt/skills.git ~/skills
@@ -37,21 +55,24 @@ cd ~/skills
 ./scripts/sync.sh
 ```
 
-仅执行格式与重名校验（不改软链接）：
+常用管理参数：
 
 ```bash
-./scripts/sync.sh --validate-only
+./scripts/sync.sh --list-agents               # 查看 27 个主流 Agent 适配器的本机检测状态与路径
+./scripts/sync.sh --agents antigravity,cursor # 仅向指定 Agent 挂载（未启动过也会提前建好目录）
+./scripts/sync.sh --validate-only             # 仅执行跨端兼容性与重名校验，不改软链接
 ```
 
 ### 2. 跨设备快速安装（基于 `skills` CLI）
 
-在其他机器上无需手动维护软链接，可直接通过 [skills CLI](https://github.com/vercel/skills) 安装：
+在其他机器上也可直接通过 [skills CLI](https://github.com/vercel/skills) 按需拉取：
 
 ```bash
-# 全局安装全部公开技能
+# 全局安装全部公开技能（自动识别目标机器已安装的 Agent）
 npx skills add Neomelt/skills -g
 
-# 仅安装指定技能
+# 指定安装到特定客户端（如 Antigravity 或 Claude Code）或只装单个技能
+npx skills add Neomelt/skills --agent antigravity -g
 npx skills add Neomelt/skills --skill distill-skill -g
 ```
 
@@ -61,13 +82,13 @@ npx skills add Neomelt/skills --skill distill-skill -g
 
 ### 方式 A：让 Agent 自动提炼（最常用）
 
-在任意工作、学习或日常会话结束时，直接对 Agent 说：
+在任意工作、学习或日常会话结束时，直接对当前使用的任意 Agent 说：
 
 ```text
 帮我把刚才这套做法提炼成 skill 收进 ~/skills
 ```
 
-或显式点名调用 `@distill-skill`（OpenCode）/ `$distill-skill`（Codex）。Agent 会自动提取关键步骤与踩坑点、检查隐私脱敏、落位分类并同步软链接。
+或按客户端习惯显式点名（OpenCode `@distill-skill` / Claude Code `/distill-skill` / Codex `$distill-skill` / Antigravity 直接点名 `distill-skill`）。Agent 会自动提取关键步骤与踩坑点、检查隐私脱敏、落位分类并同步到本机全部已安装客户端。
 
 ### 方式 B：命令行脚手架手动新建
 
@@ -85,12 +106,12 @@ cd ~/skills
 遇到通用需求（如 Office/PDF 文档处理、MCP 开发、工程门禁）时，可以先借力社区与官方成熟轮子，再把自己的个性化工作流沉淀进本仓库：
 
 - **规范文档**：[agentskills.io](https://agentskills.io)（机器可读活索引：[`llms.txt`](https://agentskills.io/llms.txt)）
-- **[`DBinK/dbk-skills`](https://github.com/DBinK/dbk-skills)**：人机权责边界、咨询防误改锁（`dbk-ask`）、Rust/Python 质量门禁与 Git Worktree / PR 闭环工作流（本仓库结构的重要参考灵感来源）
-- **[`anthropics/skills`](https://github.com/anthropics/skills)**：Anthropic 官方技能集，含 `pdf`、`docx`、`pptx`、`xlsx`、`mcp-builder`、`frontend-design`、`webapp-testing` 等高质量参考实现
+- **[`DBinK/dbk-skills`](https://github.com/DBinK/dbk-skills)**：人机权责边界、咨询防误改锁（`dbk-ask`）、Rust/Python 质量门禁与 Git Worktree / PR 闭环工作流
+- **[`anthropics/skills`](https://github.com/anthropics/skills)**：Anthropic 官方技能集，含 `pdf`、`docx`、`pptx`、`xlsx`、`mcp-builder`、`frontend-design`、`webapp-testing` 等参考实现
 - **[`openai/skills`](https://github.com/openai/skills)**：OpenAI Codex 官方精选技能库
 - **[`skills.sh`](https://skills.sh)**：社区公开技能检索排行与分发平台
 
-安装外部单个优秀技能到全局（不会污染本仓库，本仓库的 `sync.sh` 会自动保护非本仓库管理的外部技能）：
+安装外部单个优秀技能到全局（`sync.sh` 会自动保护非本仓库管理的外部技能不被覆盖或清理）：
 
 ```bash
 npx skills add anthropics/skills --skill pdf -g

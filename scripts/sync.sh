@@ -7,17 +7,220 @@ exec python3 - "$REPO_ROOT" "$@" <<'PY'
 import os
 import re
 import sys
+from dataclasses import dataclass
 from pathlib import Path
 
-ALLOWED_KEYS = {
+# "最大公约数" 跨端安全字段（Codex / Antigravity / OpenCode / Claude Code / Cursor / Gemini CLI 全部原生支持）
+UNIVERSAL_KEYS = {
     "name",
     "description",
     "license",
-    "compatibility",
     "metadata",
     "allowed-tools",
 }
+# 部分客户端支持但非全端通用的扩展字段（给出兼容提示而非直接阻断）
+EXTENDED_KEYS = {
+    "compatibility": "agentskills.io 标准字段（Antigravity/OpenCode/Claude 支持，但 Codex 官方 quick_validate.py 未收录）",
+    "disable-model-invocation": "仅 OpenCode / Claude Code 识别；建议同时配置或了解目标端策略",
+    "user-invocable": "Claude Code 扩展字段，其他 Agent 会忽略或由严格校验器告警",
+    "context": "Claude Code 扩展字段（如 context: fork），其他 Agent 不支持",
+    "hooks": "仅 Claude Code / Cline / Kiro 支持",
+}
 NAME_RE = re.compile(r"^[a-z0-9]+(?:-+[a-z0-9]+)*$")
+
+
+@dataclass
+class AgentAdapter:
+    id: str
+    name: str
+    skills_dir: Path
+    detect_paths: list[Path]
+    always_enable: bool = False
+    note: str = ""
+
+    def is_installed(self) -> bool:
+        if self.always_enable:
+            return True
+        return any(p.exists() for p in self.detect_paths)
+
+
+def build_adapters() -> list[AgentAdapter]:
+    home = Path.home()
+    xdg_config = Path(os.environ.get("XDG_CONFIG_HOME", "").strip() or (home / ".config"))
+    claude_home = Path(os.environ.get("CLAUDE_CONFIG_DIR", "").strip() or (home / ".claude"))
+    codex_home = Path(os.environ.get("CODEX_HOME", "").strip() or (home / ".codex"))
+
+    return [
+        AgentAdapter(
+            id="universal",
+            name="Agent Skills 通用标准 (Pi / Cline / Kimi / Warp / Zed 等)",
+            skills_dir=home / ".agents" / "skills",
+            detect_paths=[home / ".agents", home / ".pi" / "agent", home / ".cline", home / ".kimi"],
+            always_enable=True,
+        ),
+        AgentAdapter(
+            id="antigravity",
+            name="Google Antigravity / AGY CLI",
+            skills_dir=home / ".gemini" / "config" / "skills",
+            detect_paths=[
+                home / ".gemini" / "antigravity-cli",
+                home / ".gemini" / "antigravity",
+                xdg_config / "antigravity",
+                home / ".gemini" / "config",
+            ],
+            note="Antigravity 全局仅扫描 ~/.gemini/config/skills，不读 ~/.agents/skills",
+        ),
+        AgentAdapter(
+            id="gemini-cli",
+            name="Gemini CLI",
+            skills_dir=home / ".gemini" / "skills",
+            detect_paths=[home / ".gemini"],
+        ),
+        AgentAdapter(
+            id="opencode",
+            name="OpenCode",
+            skills_dir=xdg_config / "opencode" / "skills",
+            detect_paths=[xdg_config / "opencode"],
+        ),
+        AgentAdapter(
+            id="claude-code",
+            name="Claude Code",
+            skills_dir=claude_home / "skills",
+            detect_paths=[claude_home],
+        ),
+        AgentAdapter(
+            id="codex",
+            name="OpenAI Codex",
+            skills_dir=codex_home / "skills",
+            detect_paths=[codex_home, Path("/etc/codex")],
+        ),
+        AgentAdapter(
+            id="cursor",
+            name="Cursor",
+            skills_dir=home / ".cursor" / "skills",
+            detect_paths=[home / ".cursor", xdg_config / "Cursor"],
+        ),
+        AgentAdapter(
+            id="windsurf",
+            name="Windsurf",
+            skills_dir=home / ".codeium" / "windsurf" / "skills",
+            detect_paths=[home / ".codeium" / "windsurf"],
+        ),
+        AgentAdapter(
+            id="github-copilot",
+            name="GitHub Copilot",
+            skills_dir=home / ".copilot" / "skills",
+            detect_paths=[home / ".copilot"],
+        ),
+        AgentAdapter(
+            id="trae",
+            name="Trae",
+            skills_dir=home / ".trae" / "skills",
+            detect_paths=[home / ".trae"],
+        ),
+        AgentAdapter(
+            id="trae-cn",
+            name="Trae CN",
+            skills_dir=home / ".trae-cn" / "skills",
+            detect_paths=[home / ".trae-cn"],
+        ),
+        AgentAdapter(
+            id="qoder",
+            name="Qoder",
+            skills_dir=home / ".qoder" / "skills",
+            detect_paths=[home / ".qoder"],
+        ),
+        AgentAdapter(
+            id="qoder-cn",
+            name="Qoder CN",
+            skills_dir=home / ".qoder-cn" / "skills",
+            detect_paths=[home / ".qoder-cn"],
+        ),
+        AgentAdapter(
+            id="junie",
+            name="JetBrains Junie",
+            skills_dir=home / ".junie" / "skills",
+            detect_paths=[home / ".junie"],
+        ),
+        AgentAdapter(
+            id="roo",
+            name="Roo Code",
+            skills_dir=home / ".roo" / "skills",
+            detect_paths=[home / ".roo"],
+        ),
+        AgentAdapter(
+            id="kilo",
+            name="Kilo Code",
+            skills_dir=home / ".kilo" / "skills",
+            detect_paths=[home / ".kilo", home / ".kilocode"],
+        ),
+        AgentAdapter(
+            id="kiro-cli",
+            name="Kiro CLI",
+            skills_dir=home / ".kiro" / "skills",
+            detect_paths=[home / ".kiro"],
+        ),
+        AgentAdapter(
+            id="continue",
+            name="Continue",
+            skills_dir=home / ".continue" / "skills",
+            detect_paths=[home / ".continue"],
+        ),
+        AgentAdapter(
+            id="qwen-code",
+            name="Qwen Code",
+            skills_dir=home / ".qwen" / "skills",
+            detect_paths=[home / ".qwen"],
+        ),
+        AgentAdapter(
+            id="lingma",
+            name="通义灵码 (Lingma)",
+            skills_dir=home / ".lingma" / "skills",
+            detect_paths=[home / ".lingma"],
+        ),
+        AgentAdapter(
+            id="codebuddy",
+            name="CodeBuddy",
+            skills_dir=home / ".codebuddy" / "skills",
+            detect_paths=[home / ".codebuddy"],
+        ),
+        AgentAdapter(
+            id="goose",
+            name="Goose",
+            skills_dir=xdg_config / "goose" / "skills",
+            detect_paths=[xdg_config / "goose"],
+        ),
+        AgentAdapter(
+            id="amp",
+            name="Amp / Replit",
+            skills_dir=xdg_config / "agents" / "skills",
+            detect_paths=[xdg_config / "amp"],
+        ),
+        AgentAdapter(
+            id="openhands",
+            name="OpenHands",
+            skills_dir=home / ".openhands" / "skills",
+            detect_paths=[home / ".openhands"],
+        ),
+        AgentAdapter(
+            id="openclaw",
+            name="OpenClaw",
+            skills_dir=home / ".openclaw" / "skills",
+            detect_paths=[home / ".openclaw", home / ".clawdbot", home / ".moltbot"],
+        ),
+        AgentAdapter(
+            id="augment",
+            name="Augment",
+            skills_dir=home / ".augment" / "skills",
+            detect_paths=[home / ".augment"],
+        ),
+        AgentAdapter(
+            id="crush",
+            name="Crush",
+            skills_dir=xdg_config / "crush" / "skills",
+            detect_paths=[xdg_config / "crush"],
+        ),
+    ]
 
 
 def parse_frontmatter(text: str) -> tuple[dict | None, str | None]:
@@ -40,7 +243,6 @@ def parse_frontmatter(text: str) -> tuple[dict | None, str | None]:
     except Exception as exc:
         return None, f"YAML 解析失败: {exc}"
 
-    # Zero-dependency fallback parser for simple top-level YAML keys
     data: dict[str, object] = {}
     current_key: str | None = None
     for raw_line in block.splitlines():
@@ -54,30 +256,35 @@ def parse_frontmatter(text: str) -> tuple[dict | None, str | None]:
             current_key = k
         elif current_key and raw_line.startswith((" ", "\t")):
             prev = data.get(current_key, "")
-            if isinstance(prev, str) and prev not in ("|", ">", ""):
+            if isinstance(prev, str) and prev not in ("|", ">", ">-", ""):
                 data[current_key] = f"{prev} {raw_line.strip()}"
-            elif prev in ("|", ">"):
+            elif prev in ("|", ">", ">-"):
                 data[current_key] = raw_line.strip()
     return data, None
 
 
-def validate_skill_dir(skill_dir: Path) -> list[str]:
+def validate_skill_dir(skill_dir: Path) -> tuple[list[str], list[str]]:
     errors: list[str] = []
+    warnings: list[str] = []
     skill_md = skill_dir / "SKILL.md"
     if not skill_md.is_file():
-        return ["未找到 SKILL.md"]
+        return ["未找到 SKILL.md"], []
 
     content = skill_md.read_text(encoding="utf-8")
     fm, err = parse_frontmatter(content)
     if err or fm is None:
-        return [err or "Frontmatter 解析失败"]
+        return [err or "Frontmatter 解析失败"], []
 
-    unexpected = set(fm.keys()) - ALLOWED_KEYS
+    allowed_all = UNIVERSAL_KEYS | set(EXTENDED_KEYS.keys())
+    unexpected = set(fm.keys()) - allowed_all
     if unexpected:
         errors.append(
-            f"包含未定义的 frontmatter 字段: {', '.join(sorted(unexpected))} "
-            f"(允许: {', '.join(sorted(ALLOWED_KEYS))})"
+            f"包含未知的 frontmatter 字段: {', '.join(sorted(unexpected))} "
+            f"(跨端通用字段: {', '.join(sorted(UNIVERSAL_KEYS))})"
         )
+
+    for ext_key in sorted(set(fm.keys()) & set(EXTENDED_KEYS.keys())):
+        warnings.append(f"使用了扩展字段 '{ext_key}': {EXTENDED_KEYS[ext_key]}")
 
     name = str(fm.get("name", "")).strip()
     if not name:
@@ -99,19 +306,20 @@ def validate_skill_dir(skill_dir: Path) -> list[str]:
         if len(desc) > 1024:
             errors.append(f"description 长度 ({len(desc)}) 超过 1024 字符上限")
         if "<" in desc or ">" in desc:
-            errors.append("description 不建议包含尖括号 (< 或 >)，否则 Codex 校验器会拒绝加载")
+            errors.append("description 不应包含尖括号 (< 或 >)，否则 Codex 严格校验器会拒绝加载")
         if "__SKILL_" in desc or desc.startswith("[TODO:"):
             errors.append("description 仍包含未替换的模板占位符")
 
     if "__SKILL_NAME__" in content or "__SKILL_DESCRIPTION__" in content:
         errors.append("SKILL.md 正文仍包含未替换的模板占位符")
 
-    return errors
+    return errors, warnings
 
 
-def discover_skills(repo_root: Path) -> tuple[dict[str, tuple[Path, str]], list[str]]:
+def discover_skills(repo_root: Path) -> tuple[dict[str, tuple[Path, str]], list[str], list[str]]:
     skills: dict[str, tuple[Path, str]] = {}
     errors: list[str] = []
+    warnings: list[str] = []
 
     public_root = repo_root / "skills"
     if public_root.is_dir():
@@ -120,8 +328,9 @@ def discover_skills(repo_root: Path) -> tuple[dict[str, tuple[Path, str]], list[
                 if not (skill_dir / "SKILL.md").exists():
                     continue
                 rel = f"skills/{category_dir.name}/{skill_dir.name}"
-                for e in validate_skill_dir(skill_dir):
-                    errors.append(f"[{rel}] {e}")
+                errs, warns = validate_skill_dir(skill_dir)
+                errors.extend(f"[{rel}] {e}" for e in errs)
+                warnings.extend(f"[{rel}] {w}" for w in warns)
                 if skill_dir.name in skills:
                     prev_rel = skills[skill_dir.name][1]
                     errors.append(f"检测到重名 Skill ID '{skill_dir.name}': {prev_rel} 与 {rel}")
@@ -134,15 +343,16 @@ def discover_skills(repo_root: Path) -> tuple[dict[str, tuple[Path, str]], list[
             if not (skill_dir / "SKILL.md").exists():
                 continue
             rel = f"private/{skill_dir.name}"
-            for e in validate_skill_dir(skill_dir):
-                errors.append(f"[{rel}] {e}")
+            errs, warns = validate_skill_dir(skill_dir)
+            errors.extend(f"[{rel}] {e}" for e in errs)
+            warnings.extend(f"[{rel}] {w}" for w in warns)
             if skill_dir.name in skills:
                 prev_rel = skills[skill_dir.name][1]
                 errors.append(f"检测到重名 Skill ID '{skill_dir.name}': {prev_rel} 与 {rel}")
             else:
                 skills[skill_dir.name] = (skill_dir.resolve(), rel)
 
-    return skills, errors
+    return skills, errors, warnings
 
 
 def is_managed_link(link_path: Path, repo_root: Path) -> bool:
@@ -157,19 +367,93 @@ def is_managed_link(link_path: Path, repo_root: Path) -> bool:
         return False
 
 
+def print_help() -> None:
+    print(
+        """用法:
+  ./scripts/sync.sh [选项]
+
+选项:
+  (无参数)                校验全部 Skill，自动检测本机已安装的主流 Agent 并同步软链接
+  --validate-only         仅执行跨 Agent 兼容性与格式校验，不修改任何软链接
+  --list-agents           列出内置支持的全部主流 Agent 适配器及本机检测状态
+  --agents <id1,id2,...>  仅向指定的 Agent ID 同步（即使本机尚未检测到其配置目录也会创建挂载）
+  --all-agents            强制向内置支持的全部主流 Agent 目录挂载
+  -h, --help              显示此帮助信息"""
+    )
+
+
 def main() -> int:
     repo_root = Path(sys.argv[1]).resolve()
-    args = set(sys.argv[2:])
-    validate_only = "--validate-only" in args
+    raw_args = sys.argv[2:]
 
-    skills, errors = discover_skills(repo_root)
+    validate_only = False
+    list_agents = False
+    all_agents = False
+    selected_ids: list[str] = []
+
+    i = 0
+    while i < len(raw_args):
+        arg = raw_args[i]
+        if arg in ("-h", "--help"):
+            print_help()
+            return 0
+        elif arg == "--validate-only":
+            validate_only = True
+        elif arg == "--list-agents":
+            list_agents = True
+        elif arg == "--all-agents":
+            all_agents = True
+        elif arg == "--agents":
+            if i + 1 >= len(raw_args):
+                print("❌ --agents 需要提供逗号分隔的 Agent ID 列表", file=sys.stderr)
+                return 1
+            selected_ids.extend(x.strip() for x in raw_args[i + 1].split(",") if x.strip())
+            i += 1
+        elif arg.startswith("--agents="):
+            selected_ids.extend(x.strip() for x in arg.split("=", 1)[1].split(",") if x.strip())
+        else:
+            print(f"❌ 未知参数: {arg}（使用 --help 查看用法）", file=sys.stderr)
+            return 1
+        i += 1
+
+    adapters = build_adapters()
+    adapter_map = {a.id: a for a in adapters}
+
+    if list_agents:
+        print(f"📋 内置支持 {len(adapters)} 个主流 Agent 生态适配器：\n")
+        for a in adapters:
+            installed = a.is_installed()
+            badge = "🟢 已就绪" if installed else "⚪ 未检测"
+            line = f"  {badge}  {a.id:<16} {a.name:<46} -> {a.skills_dir}"
+            print(line)
+            if a.note:
+                print(f"{'':28}💡 {a.note}")
+        return 0
+
+    if selected_ids:
+        unknown = [aid for aid in selected_ids if aid not in adapter_map]
+        if unknown:
+            print(
+                f"❌ 未知的 Agent ID: {', '.join(unknown)}\n"
+                f"   可用 ID: {', '.join(adapter_map.keys())}",
+                file=sys.stderr,
+            )
+            return 1
+
+    skills, errors, warnings = discover_skills(repo_root)
+    if warnings:
+        print("⚠️  跨 Agent 兼容提示：")
+        for w in warnings:
+            print(f"  - {w}")
+        print()
+
     if errors:
         print("❌ Skill 校验未通过：", file=sys.stderr)
         for err in errors:
             print(f"  - {err}", file=sys.stderr)
         return 1
 
-    print(f"✅ 已通过校验，共发现 {len(skills)} 个 Skill：")
+    print(f"✅ 已通过跨端兼容校验，共发现 {len(skills)} 个 Skill：")
     for name, (_, rel) in sorted(skills.items()):
         scope = "🔒 本地私有" if rel.startswith("private/") else "🌐 公开仓库"
         print(f"  - {name:<24} ({scope}: {rel})")
@@ -177,27 +461,28 @@ def main() -> int:
     if validate_only:
         return 0
 
-    home = Path.home()
-    targets = [
-        ("Agent Skills 通用 / OpenCode", home / ".agents" / "skills"),
-        ("Claude Code", home / ".claude" / "skills"),
-        ("Codex", home / ".codex" / "skills"),
-    ]
+    if selected_ids:
+        active_adapters = [adapter_map[aid] for aid in dict.fromkeys(selected_ids)]
+    elif all_agents:
+        active_adapters = adapters
+    else:
+        active_adapters = [a for a in adapters if a.is_installed()]
 
-    print("\n🔗 正在同步软链接到本机各 Agent 目录：")
-    for label, target_dir in targets:
+    skipped_count = len(adapters) - len(active_adapters)
+    print(f"\n🔗 正在同步软链接到 {len(active_adapters)} 个目标目录（另有 {skipped_count} 个未安装的 Agent 自动跳过，可用 --list-agents 查看）：")
+
+    for adapter in active_adapters:
+        target_dir = adapter.skills_dir
         target_dir.mkdir(parents=True, exist_ok=True)
         linked = 0
         pruned = 0
         skipped: list[str] = []
 
-        # Prune stale symlinks pointing into this repo
         for entry in sorted(target_dir.iterdir()):
             if is_managed_link(entry, repo_root) and entry.name not in skills:
                 entry.unlink()
                 pruned += 1
 
-        # Create/update symlinks for active skills
         for name, (src_dir, _) in sorted(skills.items()):
             dest = target_dir / name
             if dest.is_symlink():
@@ -207,16 +492,16 @@ def main() -> int:
                         dest.symlink_to(src_dir)
                     linked += 1
                 else:
-                    skipped.append(f"{name} (指向外部软链接，已跳过)")
+                    skipped.append(f"{name} (指向外部软链接，已保护跳过)")
             elif dest.exists():
                 skipped.append(f"{name} (已存在同名非软链接目录，已保护跳过)")
             else:
                 dest.symlink_to(src_dir)
                 linked += 1
 
-        summary = f"  - {label:<28} -> {target_dir} (已挂载 {linked} 个"
+        summary = f"  - [{adapter.id:<14}] {adapter.name:<44} -> {target_dir} (挂载 {linked}"
         if pruned:
-            summary += f"，清理失效链接 {pruned} 个"
+            summary += f"，清理 {pruned}"
         summary += ")"
         print(summary)
         for s in skipped:
