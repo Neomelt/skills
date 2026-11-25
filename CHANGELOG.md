@@ -2,6 +2,12 @@
 
 本仓库记录个人 Agent Skills 的新增与重要演进，格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)。
 
+## [0.6.0] - 2026-11-25
+
+### Changed
+
+- `deep-reading` 升级至 `0.3.0`：新增人机边界与个人文风保护铁律——所有 AI 生成/整理的笔记在顶部 YAML 单独开一行标注 `by: "AI生成"`，严禁触碰不含该标记的用户亲笔手稿，`[!quote]` 区块要求 100% 零润色保留用户的真实口语与文风。
+
 ## [0.5.0] - 2026-11-25
 
 ### Changed
