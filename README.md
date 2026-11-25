@@ -20,7 +20,7 @@
 | `meta/` | [`distill-skill`](skills/meta/distill-skill/) | 经验提炼与归档元技能：把刚跑通的方案、排障记录或方法论提炼为标准 Skill，自动完成脱敏检查、索引联动与全主流 Agent 同步 |
 | `work/` | *持续沉淀中* | 软件工程、嵌入式 / Rust / Python / Web 开发规范、排障流程与自动化工具链 |
 | `study/` | *持续沉淀中* | 课程复习、论文精读、概念拆解、实验复现与学术写作 |
-| `life/` | *持续沉淀中* | 个人规划、阅读笔记、音乐制作与日常效率工作流 |
+| `life/` | [`deep-reading`](skills/life/deep-reading/) | 深度共读与博客灵感捕手：陪做书籍/议题思辨碰撞，并在对话中静默将用户的独到洞察与真问题归档至 Obsidian Vault（`读书/` 与 `思考/` 选题池） |
 
 > **本地私有技能分流（`private/`）**：本仓库为公开仓库。若某项个人技能包含不便公开的内网地址或私人上下文，可直接放入本地 `private/<skill-name>/`（已由 `.gitignore` 忽略），运行 `./scripts/sync.sh` 同样会自动挂载到本机各 Agent，但不会进入 Git 历史。
 

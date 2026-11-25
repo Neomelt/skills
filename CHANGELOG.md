@@ -2,6 +2,12 @@
 
 本仓库记录个人 Agent Skills 的新增与重要演进，格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)。
 
+## [0.4.0] - 2026-11-25
+
+### Added
+
+- `skills/life/` 新增 [`deep-reading`](skills/life/deep-reading/SKILL.md) 深度共读与博客灵感捕手技能（支持思辨追问、原话质感保留及 Obsidian `读书/` 母本 + `思考/` 博客选题卡双层静默沉淀）。
+
 ## [0.3.0] - 2026-11-25
 
 ### Added

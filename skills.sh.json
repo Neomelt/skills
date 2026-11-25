@@ -29,7 +29,9 @@
     {
       "title": "Life",
       "description": "个人效率、阅读思考、音乐创作与日常生活工作流。",
-      "skills": []
+      "skills": [
+        "deep-reading"
+      ]
     }
   ]
 }
