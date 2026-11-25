@@ -2,6 +2,17 @@
 
 本仓库记录个人 Agent Skills 的新增与重要演进，格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)。
 
+## [0.5.0] - 2026-11-25
+
+### Changed
+
+- `deep-reading` 升级至 `0.2.0`：
+  - 目录升级为 `读书/<书名>/` 文件夹层级（支持按章节、高门槛简短随笔命题、纯日期三档命名，严禁章节档与随笔档同义复写）。
+  - 确立“先碰撞深挖、再静默落盘”的深度准入红线，去除模板示例锚定词句，禁写浅层科普套话。
+  - 采用 Obsidian 原生四色语义 Callout + 默认折叠（`-`）+ `==高亮==` 排版，并附带与个人博客配色对齐的 [`assets/editorial-reading.css`](skills/life/deep-reading/assets/editorial-reading.css) 样式片段。
+  - 补充终端沙盒遮蔽 `~/Documents` 时优先使用 Agent 原生文件工具读写的踩坑记录。
+- `distill-skill`（`0.3.1`）的 `references/agent-compatibility.md` 新增各客户端原生 `Auto` 模式沙盒与跨工作区目录白名单协同守则。
+
 ## [0.4.0] - 2026-11-25
 
 ### Added

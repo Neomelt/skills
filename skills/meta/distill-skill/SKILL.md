@@ -4,7 +4,7 @@ description: 将实际工作、学习或生活中的解决方案、排障经验�
 license: MIT
 metadata:
   author: Neomelt
-  version: "0.3.0"
+  version: "0.3.1"
 ---
 
 # Distill Skill（个人经验提炼与技能归档）

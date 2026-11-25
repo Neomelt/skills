@@ -1,0 +1,91 @@
+/* ==========================================================================
+   Editorial Reading Palette for Obsidian (aligned with Neomelt_blog minimal)
+   --------------------------------------------------------------------------
+   Pure native Markdown Callout & highlight tuning — zero plugins required:
+   - [!quote]    Sage Green   : User's own voice & intuition (visual protagonist)
+   - [!info]     Slate Blue   : Book context / background (calm & collapsible)
+   - [!warning]  Ochre Amber  : Structural tension, paradox & counterexamples
+   - [!question] Iris Purple  : Open questions & blog essay hooks
+   - ==mark==    Warm Paper   : Soft editorial highlighter without neon glare
+   ========================================================================== */
+
+.theme-light {
+  --er-quote-rgb: 47, 116, 80;     /* #2f7450 Mineral Sage */
+  --er-info-rgb: 45, 88, 110;      /* #2d586e Slate Ink */
+  --er-warning-rgb: 158, 101, 25;  /* #9e6519 Warm Ochre */
+  --er-question-rgb: 92, 77, 138;  /* #5c4d8a Iris Purple */
+  --er-mark-bg: rgba(214, 162, 46, 0.28);
+  --er-mark-border: rgba(176, 124, 18, 0.42);
+}
+
+.theme-dark {
+  --er-quote-rgb: 110, 192, 149;   /* #6ec095 Soft Jade */
+  --er-info-rgb: 132, 176, 198;    /* #84b0c6 Ice Slate */
+  --er-warning-rgb: 230, 184, 101; /* #e6b865 Warm Gold */
+  --er-question-rgb: 181, 158, 224;/* #b59ee0 Soft Iris */
+  --er-mark-bg: rgba(230, 184, 101, 0.24);
+  --er-mark-border: rgba(230, 184, 101, 0.45);
+}
+
+/* Semantic role mapping */
+.callout[data-callout="quote"],
+.callout[data-callout="cite"] {
+  --callout-color: var(--er-quote-rgb);
+}
+
+.callout[data-callout="info"],
+.callout[data-callout="note"] {
+  --callout-color: var(--er-info-rgb);
+}
+
+.callout[data-callout="warning"],
+.callout[data-callout="caution"],
+.callout[data-callout="attention"] {
+  --callout-color: var(--er-warning-rgb);
+}
+
+.callout[data-callout="question"],
+.callout[data-callout="help"],
+.callout[data-callout="faq"] {
+  --callout-color: var(--er-question-rgb);
+}
+
+/* Crisp Editorial Monograph callout geometry */
+.markdown-rendered .callout,
+.cm-s-obsidian .HyperMD-callout {
+  border-radius: 4px;
+  border-width: 1px;
+  border-style: solid;
+  border-color: rgba(var(--callout-color), 0.22);
+  border-left: 3.5px solid rgba(var(--callout-color), 0.85);
+  background-color: rgba(var(--callout-color), 0.065);
+  padding: 0.75em 1em;
+  margin: 0.85em 0;
+}
+
+/* Extra emphasis on user's own [!quote] block */
+.markdown-rendered .callout[data-callout="quote"] {
+  background-color: rgba(var(--er-quote-rgb), 0.09);
+  border-left-width: 4px;
+}
+
+.markdown-rendered .callout-title {
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  gap: 0.45em;
+}
+
+.markdown-rendered .callout-content > p {
+  line-height: 1.78;
+  margin-block: 0.45em;
+}
+
+/* Warm paper highlighter for ==text== */
+.markdown-rendered mark,
+.cm-s-obsidian span.cm-highlight {
+  background-color: var(--er-mark-bg);
+  color: inherit;
+  border-bottom: 1.5px solid var(--er-mark-border);
+  border-radius: 2px;
+  padding: 0.04em 0.24em;
+}

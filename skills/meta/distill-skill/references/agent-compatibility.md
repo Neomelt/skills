@@ -40,3 +40,6 @@
    - 统一使用 `scripts/`（可执行脚本）、`references/`（按需加载的参考文档）、`assets/`（输出模板与静态资源），兼容所有主流客户端的渐进式披露机制。
 5. **仓库级规则三端对齐**：
    - 仓库根目录以 `AGENTS.md` 为唯一真源，通过软链接提供 `CLAUDE.md -> AGENTS.md`（适配 Claude Code）与 `GEMINI.md -> AGENTS.md`（适配 Gemini CLI；Antigravity 会按真实文件路径自动去重，不会重复注入）。
+6. **跨目录 / 个人文档访问与各端 `Auto` 权限沙盒协同**：
+   - 在各客户端原生的智能自动审核模式（如 Antigravity `"agentMode": "auto"`、Claude Code `"defaultMode": "auto"`、Codex `workspace-write` + `approvals_reviewer = "auto_review"`）下，OS 终端沙盒依然处于开启状态，会在 Shell 子进程里遮蔽未显式挂载的敏感目录（如 `~/Documents`）。
+   - 涉及读写当前工作区外的固定目录（如 `~/Documents/Obsidian Vault`、`~/skills`）时，Skill 内必须指导 Agent **优先使用客户端原生文件工具**而非 Shell `ls`/`cat` 探路；同时用户可在各客户端配置中将该目录加入跨目录可写白名单（Antigravity `write_file(...)`、Claude Code `additionalDirectories`、Codex `sandbox_workspace_write.writable_roots`），即可保留沙盒保护的同时无缝静默读写。
