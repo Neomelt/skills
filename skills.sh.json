@@ -3,6 +3,13 @@
   "notGrouped": "bottom",
   "groupings": [
     {
+      "title": "General",
+      "description": "跨场景通用协作机制、个人看板跟踪与基础效率工作流。",
+      "skills": [
+        "todo-board"
+      ]
+    },
+    {
       "title": "Meta",
       "description": "元技能：经验提炼、Skill 开发规范与仓库自维护。",
       "skills": [

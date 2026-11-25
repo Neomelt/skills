@@ -1,6 +1,6 @@
 # skills 仓库维护指南
 
-本仓库是 Neomelt 的个人 Agent Skills 集合，遵循 [agentskills.io](https://agentskills.io) 规范，通过 `scripts/sync.sh` 自动检测并软链接同步到本机主流 Agent（Antigravity、Gemini CLI、OpenCode、Claude Code、Codex、Cursor、Windsurf、GitHub Copilot、Pi、Trae、Qoder、Junie、Roo Code 等 27 个生态适配器），同时兼容 `npx skills add Neomelt/skills -g` 跨设备分发。
+本仓库是 Neomelt 的个人 Agent Skills 集合，遵循 [agentskills.io](https://agentskills.io) 规范，通过 `scripts/sync.sh` 自动检测并软链接同步到本机主流 Agent（Antigravity、Gemini CLI、OpenCode、Claude Code、Codex、Cursor、Windsurf、GitHub Copilot、Pi、Trae、Qoder、Junie、Roo Code 等 27 个生态适配器），同时统一维护各端轻量级全局规则入口 `global/AGENTS.md`，并兼容 `npx skills add Neomelt/skills -g` 跨设备分发。
 
 ## 动手前必读
 
@@ -14,17 +14,20 @@
 ```text
 ~/skills/
 ├── skills/                  # 公开技能根目录（兼容 npx skills 与 skills.sh）
-│   ├── meta/                # 元技能与跨场景协作底座
+│   ├── general/             # 跨领域通用协作机制、个人看板与基础效率流
 │   ├── work/                # 工程开发、排障调试与工具链工作流
 │   ├── study/               # 课程学习、论文精读、概念拆解与实验复现
-│   └── life/                # 日常规划、阅读思考、音乐制作与生活流
+│   ├── life/                # 日常规划、阅读思考、音乐制作与生活流
+│   └── meta/                # 元技能：经验提炼与仓库自维护
+├── global/
+│   └── AGENTS.md            # 本机各端全局规则唯一真源（极简路由指针，由 sync.sh 挂载至各客户端全局配置）
 ├── private/                 # 本地私有技能目录（.gitignore 忽略子目录，仅本机同步）
 ├── templates/
 │   └── SKILL.template.md    # 新建技能模板（避开 SKILL.md 命名，防止被误识别加载）
 ├── scripts/
 │   ├── new-skill.sh         # 一键生成新技能骨架
-│   └── sync.sh              # 跨端兼容校验 + 27 个主流 Agent 自动检测与软链接同步
-├── AGENTS.md                # 仓库维护规范唯一真源
+│   └── sync.sh              # 跨端兼容校验 + 27 个主流 Agent 软链接与全局规则同步
+├── AGENTS.md                # 本仓库内开发维护规范唯一真源
 ├── CLAUDE.md                # -> AGENTS.md 软链接（适配 Claude Code）
 ├── GEMINI.md                # -> AGENTS.md 软链接（适配 Gemini CLI；Antigravity 按真实路径自动去重）
 ├── skills.sh.json           # skills.sh 分组展示配置
@@ -57,7 +60,7 @@
 
 - **授权边界**：日常维护时只修改文件并运行 `./scripts/sync.sh` 验证；除非用户在当次对话中明确要求，不自动执行 `git commit` 或 `git push`。
 - **Commit Message 规范**：统一使用英文 **Conventional Commits**，格式为 `<type>(<scope>): <imperative lowercase summary>`（首字母小写、祈使语气、结尾不加句号）：
+  - `feat(general): add todo-board skill and unify global rules`
   - `feat(work): add rust-embedded-debug skill`
-  - `feat(sync): support Antigravity and mainstream agent adapters`
   - `fix(distill-skill): strip angle brackets from template descriptions`
   - `docs: refresh skill index and compatibility matrix`

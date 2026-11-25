@@ -4,7 +4,7 @@ description: 将实际工作、学习或生活中的解决方案、排障经验�
 license: MIT
 metadata:
   author: Neomelt
-  version: "0.2.0"
+  version: "0.3.0"
 ---
 
 # Distill Skill（个人经验提炼与技能归档）
@@ -18,7 +18,7 @@ metadata:
    - 果断删减：大模型原本就会的通用背景解释、空泛套话（如“注意错误处理”“遵循最佳实践”）。判断标准：**“删掉这句话，下次 Agent 会不会做错或绕弯路？”** 不会就删掉。
 2. **公开仓库隐私脱敏红线（最高优先级）**：
    - `~/skills` 绑定了 **GitHub 公开仓库（`Neomelt/skills`）**。
-   - 归入 `skills/{meta,work,study,life}/` 前，**必须清查并脱敏**一切密钥、Token、密码、私人服务器 IP/内网域名、学号/手机号、私人账号路径等敏感信息，统一替换为环境变量或清晰占位符。
+   - 归入 `skills/{general,work,study,life,meta}/` 前，**必须清查并脱敏**一切密钥、Token、密码、私人服务器 IP/内网域名、学号/手机号、私人账号路径等敏感信息，统一替换为环境变量或清晰占位符。
    - 若某个技能高度依赖不便公开的私人环境信息，直接将其归入 Git 自动忽略的 `~/skills/private/` 目录——照常享受本机全 Agent 软链接同步，但绝不进入版本库。
 3. **全主流 Agent 最大公约数兼容**：
    - 对 `SKILL.md` 格式规范拿不准时，先拉取 `https://agentskills.io/llms.txt` 及 `specification.md` 核实；遇到特定客户端发现路径或语法差异时，查阅 [references/agent-compatibility.md](references/agent-compatibility.md)。
@@ -36,15 +36,17 @@ metadata:
 
 - [ ] **2. 选定分类与命名**
   - 按用途落位目录：
-    - `skills/meta/`：元技能、跨场景通用协作准则
+    - `skills/general/`：跨领域通用协作规则、任务跟踪（如个人看板）、基础效率工具流
     - `skills/work/`：软件工程、嵌入式/Rust/Python/Web 开发、排障与工具链
     - `skills/study/`：课程学习、论文精读、概念拆解、实验复现与写作
     - `skills/life/`：日常规划、阅读笔记、音乐制作、生活效率流
+    - `skills/meta/`：专门管理 Skill 本身生命周期与仓库维护的元技能
     - `private/`：含个人隐私或内部地址、仅限本机使用的私有技能
   - 可用脚手架快速生成骨架：
     ```bash
     ~/skills/scripts/new-skill.sh <分类> <skill-name> "<一句话描述>"
     ```
+  - 若某项通用技能需要在每次新会话都做极简提示路由，可同步维护 `~/skills/global/AGENTS.md`（保持几行以内的轻量指针，详细规程留在 `SKILL.md` 内）。
 
 - [ ] **3. 编写精炼的技能内容（渐进式披露）**
   - 主 `SKILL.md` 控制在精悍易读的篇幅（通常 200 行以内），直接给出核心流程、判断条件与踩坑记录。
@@ -54,13 +56,13 @@ metadata:
     - `assets/`：需要原样复制或填充的输出模板、静态资源。
 
 - [ ] **4. 联动更新仓库索引（仅限公开技能）**
-  - 若新增、改名或删除了 `skills/{meta,work,study,life}/` 下的公开技能，同步更新 `~/skills/` 根目录的：
+  - 若新增、改名或删除了 `skills/{general,work,study,life,meta}/` 下的公开技能，同步更新 `~/skills/` 根目录的：
     1. `README.md` 对应分类技能表
     2. `skills.sh.json` 对应分组的 `skills` 数组
     3. `CHANGELOG.md`（新增标 `0.1.0`，行为变更 bump `metadata.version` 的 minor，微调 bump patch）
 
 - [ ] **5. 校验并同步到本机全部已安装 Agent**
-  - 运行仓库同步脚本完成跨端格式校验与自动检测挂载（Antigravity、Gemini CLI、OpenCode、Claude Code、Codex、Cursor、Copilot、Pi、Qoder、Junie 等）：
+  - 运行仓库同步脚本完成跨端格式校验与自动检测挂载：
     ```bash
     ~/skills/scripts/sync.sh
     ```

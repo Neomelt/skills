@@ -8,7 +8,7 @@
 
 设计目标只有两个：
 1. **经验不随单次对话归零**：把真正踩过的坑、跑通的链路和个人偏好固化成可复用的 `SKILL.md`，让后续任务直接站在前一次的结论上起步。
-2. **一次沉淀，全端互通**：严格遵循 [agentskills.io](https://agentskills.io) 开放规范与跨端最大公约数约束，自动检测并适配挂载 **Antigravity、Gemini CLI、OpenCode、Claude Code、Codex、Cursor、Windsurf、GitHub Copilot、Pi、Trae、Qoder、Junie** 等主流 Agent，同时支持通过 `skills` CLI 跨设备按需拉取。
+2. **一次沉淀，全端互通**：严格遵循 [agentskills.io](https://agentskills.io) 开放规范与跨端最大公约数约束，自动检测并适配挂载 **Antigravity、Gemini CLI、OpenCode、Claude Code、Codex、Cursor、Windsurf、GitHub Copilot、Pi、Trae、Qoder、Junie** 等主流 Agent，同时统一维护各端轻量级全局规则入口（`global/AGENTS.md`）。
 
 ---
 
@@ -16,6 +16,7 @@
 
 | 分类 | Skill | 用途 |
 |---|---|---|
+| `general/` | [`todo-board`](skills/general/todo-board/) | 个人看板任务跟踪：在较大任务动手前通过 `todo` CLI 查重认领或新建立项、同步进度与决策阻塞，并配合 `kanban-skip` 守门放行 |
 | `meta/` | [`distill-skill`](skills/meta/distill-skill/) | 经验提炼与归档元技能：把刚跑通的方案、排障记录或方法论提炼为标准 Skill，自动完成脱敏检查、索引联动与全主流 Agent 同步 |
 | `work/` | *持续沉淀中* | 软件工程、嵌入式 / Rust / Python / Web 开发规范、排障流程与自动化工具链 |
 | `study/` | *持续沉淀中* | 课程复习、论文精读、概念拆解、实验复现与学术写作 |
@@ -27,16 +28,17 @@
 
 ## 已适配的主流 Agent 矩阵
 
-`./scripts/sync.sh` 内置 27 个主流 Agent 适配器，运行时会自动检测本机已安装的客户端并挂载软链接（未安装的自动跳过，不污染家目录）：
+`./scripts/sync.sh` 内置 27 个主流 Agent 适配器，运行时会自动检测本机已安装的客户端，同步挂载 **Skills 目录** 与 **全局规则入口（[`global/AGENTS.md`](global/AGENTS.md)）**：
 
-| Agent / 生态 | 全局挂载路径 | 说明 |
+| Agent / 生态 | 全局 Skills 挂载路径 | 全局规则挂载路径 |
 |---|---|---|
-| **Google Antigravity / AGY CLI** | `~/.gemini/config/skills/` | Antigravity IDE / `agy` 全局仅扫描该目录，不读 `~/.agents/skills/` |
-| **Gemini CLI** | `~/.gemini/skills/` | 配合仓库根目录 `GEMINI.md` 规则入口 |
-| **OpenCode** | `~/.config/opencode/skills/` | 同时兼容 `~/.agents/skills/`，支持 `@skill-id` 点名 |
-| **Claude Code** | `~/.claude/skills/` | 配合 `CLAUDE.md`，支持 `/skill-id` 斜杠调用 |
-| **OpenAI Codex** | `~/.codex/skills/` | 同时兼容 `~/.agents/skills/`，支持 `$skill-id` 点名 |
-| **Universal 通用组** | `~/.agents/skills/` | 原生覆盖 **Pi、Cline、Kimi Code CLI、Warp、Zed、Droid** 等 |
+| **Google Antigravity / AGY CLI** | `~/.gemini/config/skills/` | `~/.gemini/config/rules/global.md` |
+| **Gemini CLI** | `~/.gemini/skills/` | `~/.gemini/GEMINI.md` |
+| **OpenCode** | `~/.config/opencode/skills/` | `~/.config/opencode/AGENTS.md` |
+| **Claude Code** | `~/.claude/skills/` | `~/.claude/CLAUDE.md` |
+| **OpenAI Codex** | `~/.codex/skills/` | `~/.codex/AGENTS.md` |
+| **Pi** | `~/.agents/skills/` | `~/.pi/agent/AGENTS.md` |
+| **Universal 通用组** | `~/.agents/skills/` | 原生覆盖 **Cline、Kimi Code CLI、Warp、Zed、Droid** 等 |
 | **AI IDE 与插件生态** | 各自全局 `skills/` 目录 | 自动检测支持 **Cursor、Windsurf、GitHub Copilot、Trae / Trae CN、Qoder / Qoder CN、JetBrains Junie、Roo Code、Kilo Code、Kiro CLI、Continue、Qwen Code、通义灵码、CodeBuddy、Goose、Amp、OpenHands、OpenClaw、Augment、Crush** |
 
 完整跨端差异与编写规范详见 [`agent-compatibility.md`](skills/meta/distill-skill/references/agent-compatibility.md)。
@@ -59,7 +61,8 @@ cd ~/skills
 
 ```bash
 ./scripts/sync.sh --list-agents               # 查看 27 个主流 Agent 适配器的本机检测状态与路径
-./scripts/sync.sh --agents antigravity,cursor # 仅向指定 Agent 挂载（未启动过也会提前建好目录）
+./scripts/sync.sh --force-global-rules        # 自动备份各客户端原有独立全局规则文件至 ~/.config-backups/ 并统一挂载为软链接
+./scripts/sync.sh --agents antigravity,cursor # 仅向指定 Agent 挂载
 ./scripts/sync.sh --validate-only             # 仅执行跨端兼容性与重名校验，不改软链接
 ```
 
@@ -73,7 +76,7 @@ npx skills add Neomelt/skills -g
 
 # 指定安装到特定客户端（如 Antigravity 或 Claude Code）或只装单个技能
 npx skills add Neomelt/skills --agent antigravity -g
-npx skills add Neomelt/skills --skill distill-skill -g
+npx skills add Neomelt/skills --skill todo-board -g
 ```
 
 ---
@@ -94,7 +97,7 @@ npx skills add Neomelt/skills --skill distill-skill -g
 
 ```bash
 cd ~/skills
-./scripts/new-skill.sh work my-workflow "一句话说明做什么，以及何时触发"
+./scripts/new-skill.sh general my-workflow "一句话说明做什么，以及何时触发"
 # 编辑生成的 SKILL.md 后同步挂载
 ./scripts/sync.sh
 ```

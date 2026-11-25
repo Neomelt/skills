@@ -6,11 +6,12 @@ REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 exec python3 - "$REPO_ROOT" "$@" <<'PY'
 import os
 import re
+import shutil
 import sys
+import time
 from dataclasses import dataclass
 from pathlib import Path
 
-# "最大公约数" 跨端安全字段（Codex / Antigravity / OpenCode / Claude Code / Cursor / Gemini CLI 全部原生支持）
 UNIVERSAL_KEYS = {
     "name",
     "description",
@@ -18,7 +19,6 @@ UNIVERSAL_KEYS = {
     "metadata",
     "allowed-tools",
 }
-# 部分客户端支持但非全端通用的扩展字段（给出兼容提示而非直接阻断）
 EXTENDED_KEYS = {
     "compatibility": "agentskills.io 标准字段（Antigravity/OpenCode/Claude 支持，但 Codex 官方 quick_validate.py 未收录）",
     "disable-model-invocation": "仅 OpenCode / Claude Code 识别；建议同时配置或了解目标端策略",
@@ -41,6 +41,17 @@ class AgentAdapter:
     def is_installed(self) -> bool:
         if self.always_enable:
             return True
+        return any(p.exists() for p in self.detect_paths)
+
+
+@dataclass
+class GlobalRuleTarget:
+    id: str
+    name: str
+    dest_file: Path
+    detect_paths: list[Path]
+
+    def is_installed(self) -> bool:
         return any(p.exists() for p in self.detect_paths)
 
 
@@ -223,6 +234,57 @@ def build_adapters() -> list[AgentAdapter]:
     ]
 
 
+def build_global_rule_targets() -> list[GlobalRuleTarget]:
+    home = Path.home()
+    xdg_config = Path(os.environ.get("XDG_CONFIG_HOME", "").strip() or (home / ".config"))
+    claude_home = Path(os.environ.get("CLAUDE_CONFIG_DIR", "").strip() or (home / ".claude"))
+    codex_home = Path(os.environ.get("CODEX_HOME", "").strip() or (home / ".codex"))
+
+    return [
+        GlobalRuleTarget(
+            id="antigravity",
+            name="Google Antigravity / AGY CLI",
+            dest_file=home / ".gemini" / "config" / "rules" / "global.md",
+            detect_paths=[
+                home / ".gemini" / "antigravity-cli",
+                home / ".gemini" / "antigravity",
+                xdg_config / "antigravity",
+                home / ".gemini" / "config",
+            ],
+        ),
+        GlobalRuleTarget(
+            id="gemini-cli",
+            name="Gemini CLI",
+            dest_file=home / ".gemini" / "GEMINI.md",
+            detect_paths=[home / ".gemini"],
+        ),
+        GlobalRuleTarget(
+            id="opencode",
+            name="OpenCode",
+            dest_file=xdg_config / "opencode" / "AGENTS.md",
+            detect_paths=[xdg_config / "opencode"],
+        ),
+        GlobalRuleTarget(
+            id="claude-code",
+            name="Claude Code",
+            dest_file=claude_home / "CLAUDE.md",
+            detect_paths=[claude_home],
+        ),
+        GlobalRuleTarget(
+            id="codex",
+            name="OpenAI Codex",
+            dest_file=codex_home / "AGENTS.md",
+            detect_paths=[codex_home, Path("/etc/codex")],
+        ),
+        GlobalRuleTarget(
+            id="pi",
+            name="Pi",
+            dest_file=home / ".pi" / "agent" / "AGENTS.md",
+            detect_paths=[home / ".pi" / "agent"],
+        ),
+    ]
+
+
 def parse_frontmatter(text: str) -> tuple[dict | None, str | None]:
     if not text.startswith("---\n"):
         return None, "缺少开头的 YAML frontmatter (---)"
@@ -367,17 +429,69 @@ def is_managed_link(link_path: Path, repo_root: Path) -> bool:
         return False
 
 
+def sync_global_rules(repo_root: Path, force_replace: bool) -> None:
+    global_rule_src = (repo_root / "global" / "AGENTS.md").resolve()
+    if not global_rule_src.is_file():
+        return
+
+    targets = [t for t in build_global_rule_targets() if t.is_installed()]
+    if not targets:
+        return
+
+    backup_root: Path | None = None
+    stamp = time.strftime("%Y%m%d-%H%M%S")
+
+    print("\n📜 正在同步全局协作规则入口 (global/AGENTS.md)：")
+    for target in targets:
+        dest = target.dest_file
+        dest.parent.mkdir(parents=True, exist_ok=True)
+
+        if dest.is_symlink():
+            if is_managed_link(dest, repo_root):
+                if dest.resolve(strict=False) != global_rule_src:
+                    dest.unlink()
+                    dest.symlink_to(global_rule_src)
+                print(f"  - [{target.id:<14}] {dest} -> 已挂载")
+            elif force_replace:
+                if backup_root is None:
+                    backup_root = Path.home() / ".config-backups" / f"agent-global-rules-{stamp}"
+                    backup_root.mkdir(parents=True, exist_ok=True)
+                bak = backup_root / f"{target.id}-{dest.name}"
+                shutil.copy2(dest, bak, follow_symlinks=False)
+                dest.unlink()
+                dest.symlink_to(global_rule_src)
+                print(f"  - [{target.id:<14}] {dest} -> 已备份至 {bak} 并替换为软链接")
+            else:
+                print(f"  - [{target.id:<14}] ⚠️  {dest} 指向外部软链接，已保护跳过（可用 --force-global-rules 备份替换）")
+        elif dest.exists():
+            if force_replace:
+                if backup_root is None:
+                    backup_root = Path.home() / ".config-backups" / f"agent-global-rules-{stamp}"
+                    backup_root.mkdir(parents=True, exist_ok=True)
+                bak = backup_root / f"{target.id}-{dest.name}"
+                shutil.move(str(dest), str(bak))
+                dest.symlink_to(global_rule_src)
+                print(f"  - [{target.id:<14}] {dest} -> 已备份原文件至 {bak} 并挂载软链接")
+            else:
+                print(f"  - [{target.id:<14}] ⚠️  {dest} 已存在非软链接文件，已保护跳过（可用 --force-global-rules 自动备份替换）")
+        else:
+            dest.symlink_to(global_rule_src)
+            print(f"  - [{target.id:<14}] {dest} -> 已挂载")
+
+
 def print_help() -> None:
     print(
         """用法:
   ./scripts/sync.sh [选项]
 
 选项:
-  (无参数)                校验全部 Skill，自动检测本机已安装的主流 Agent 并同步软链接
+  (无参数)                校验全部 Skill，自动检测本机已安装的主流 Agent 并同步软链接与全局规则入口
   --validate-only         仅执行跨 Agent 兼容性与格式校验，不修改任何软链接
   --list-agents           列出内置支持的全部主流 Agent 适配器及本机检测状态
-  --agents <id1,id2,...>  仅向指定的 Agent ID 同步（即使本机尚未检测到其配置目录也会创建挂载）
-  --all-agents            强制向内置支持的全部主流 Agent 目录挂载
+  --agents <id1,id2,...>  仅向指定的 Agent ID 同步 Skill
+  --all-agents            强制向内置支持的全部主流 Agent 目录挂载 Skill
+  --skip-global-rules     跳过 global/AGENTS.md 全局规则文件同步
+  --force-global-rules    若目标全局规则文件已存在独立文件，自动备份至 ~/.config-backups/ 后替换为软链接
   -h, --help              显示此帮助信息"""
     )
 
@@ -389,6 +503,8 @@ def main() -> int:
     validate_only = False
     list_agents = False
     all_agents = False
+    skip_global_rules = False
+    force_global_rules = False
     selected_ids: list[str] = []
 
     i = 0
@@ -403,6 +519,10 @@ def main() -> int:
             list_agents = True
         elif arg == "--all-agents":
             all_agents = True
+        elif arg == "--skip-global-rules":
+            skip_global_rules = True
+        elif arg == "--force-global-rules":
+            force_global_rules = True
         elif arg == "--agents":
             if i + 1 >= len(raw_args):
                 print("❌ --agents 需要提供逗号分隔的 Agent ID 列表", file=sys.stderr)
@@ -506,6 +626,9 @@ def main() -> int:
         print(summary)
         for s in skipped:
             print(f"    ⚠️  {s}")
+
+    if not skip_global_rules and not selected_ids:
+        sync_global_rules(repo_root, force_global_rules)
 
     return 0
 
