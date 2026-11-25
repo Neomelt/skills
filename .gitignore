@@ -1,0 +1,18 @@
+# Local private skills (synced to local agents, NEVER pushed to public GitHub)
+private/*/
+!private/README.md
+
+# Local drafts & scratch files
+.local/
+*.local.md
+.env
+.env.*
+
+# Tooling & OS caches
+.DS_Store
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.firecrawl/
+node_modules/

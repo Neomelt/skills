@@ -1,0 +1,67 @@
+---
+name: distill-skill
+description: 将实际工作、学习或生活中的解决方案、排障经验、复盘方法论提炼沉淀为标准 Agent Skill，归档到 ~/skills 个人技能仓库并同步到本机 OpenCode、Claude Code 与 Codex。当用户要求把刚做完的事总结成 skill、沉淀工作流到技能库、或新增与迭代 ~/skills 中的个人技能时使用；仅调用其他现成技能完成普通任务时不使用。
+license: MIT
+metadata:
+  author: Neomelt
+  version: "0.1.0"
+---
+
+# Distill Skill（个人经验提炼与技能归档）
+
+将真实任务中跑通的步骤、纠错结论、领域上下文提炼为高信噪比的标准 Skill，归入 `~/skills` 并同步到本机所有 Agent。
+
+## 核心原则
+
+1. **只沉淀“非显而易见”的实战信息**：
+   - 重点提取：本次真正奏效的操作序列、用户纠正过的误区（Gotchas）、特定工具参数/环境约束、固定输入输出模板。
+   - 果断删减：大模型原本就会的通用背景解释、空泛套话（如“注意错误处理”“遵循最佳实践”）。判断标准：**“删掉这句话，下次 Agent 会不会做错或绕弯路？”** 不会就删掉。
+2. **公开仓库隐私脱敏红线（最高优先级）**：
+   - `~/skills` 绑定了 **GitHub 公开仓库（`Neomelt/skills`）**。
+   - 归入 `skills/{meta,work,study,life}/` 前，**必须清查并脱敏**一切密钥、Token、密码、私人服务器 IP/内网域名、学号/手机号、私人账号路径等敏感信息，统一替换为环境变量或清晰占位符。
+   - 若某个技能高度依赖不便公开的私人环境信息，直接将其归入 Git 自动忽略的 `~/skills/private/` 目录——照常享受本机全 Agent 软链接同步，但绝不进入版本库。
+3. **动态对齐最新规范**：
+   - 对 `SKILL.md` 字段、渐进式披露或打包格式拿不准时，先拉取 `https://agentskills.io/llms.txt` 及其指向的 `specification.md` 核实，不凭旧印象硬写。
+   - 跨客户端兼容约束：`name` 必须与目录名完全一致（仅小写字母、数字、单连字符，`<=64` 字符）；`description` 必须同时写清**做什么**与**何时触发**（`<=1024` 字符），且**不要出现英文尖括号 `<` 或 `>`**（兼容 Codex 严格校验器）。
+
+## 提炼与入库工作流
+
+- [ ] **1. 盘点现有技能与生态参考**
+  - 先检查 `~/skills/skills/` 与 `~/skills/private/`，判断是**迭代更新已有技能**（优先把新踩的坑追加进既有技能的 `踩坑记录`），还是**新建独立技能**。
+  - 若需参考官方或社区成熟写法，按需查阅 [references/ecosystem.md](references/ecosystem.md)。
+
+- [ ] **2. 选定分类与命名**
+  - 按用途落位目录：
+    - `skills/meta/`：元技能、跨场景通用协作准则
+    - `skills/work/`：软件工程、嵌入式/Rust/Python/Web 开发、排障与工具链
+    - `skills/study/`：课程学习、论文精读、概念拆解、实验复现与写作
+    - `skills/life/`：日常规划、阅读笔记、音乐制作、生活效率流
+    - `private/`：含个人隐私或内部地址、仅限本机使用的私有技能
+  - 可用脚手架快速生成骨架：
+    ```bash
+    ~/skills/scripts/new-skill.sh <分类> <skill-name> "<一句话描述>"
+    ```
+
+- [ ] **3. 编写精炼的技能内容（渐进式披露）**
+  - 主 `SKILL.md` 控制在精悍易读的篇幅（通常 200 行以内），直接给出核心流程、判断条件与踩坑记录。
+  - 只有在确实能减少重复造轮子或隔离大段参考资料时，才按需建立子目录：
+    - `scripts/`：每次都会重复手写的确定性脚本（写完实际跑通验证）。
+    - `references/`：仅在特定分支/模式下才需要按需读取的详细规范或示例，并在 `SKILL.md` 中指明何时读取。
+    - `assets/`：需要原样复制或填充的输出模板、静态资源。
+
+- [ ] **4. 联动更新仓库索引（仅限公开技能）**
+  - 若新增、改名或删除了 `skills/{meta,work,study,life}/` 下的公开技能，同步更新 `~/skills/` 根目录的：
+    1. `README.md` 对应分类技能表
+    2. `skills.sh.json` 对应分组的 `skills` 数组
+    3. `CHANGELOG.md`（新增标 `0.1.0`，行为变更 bump `metadata.version` 的 minor，微调 bump patch）
+
+- [ ] **5. 校验并同步到本机全部 Agent**
+  - 运行仓库同步脚本完成格式校验与多端软链接挂载（OpenCode / Claude Code / Codex）：
+    ```bash
+    ~/skills/scripts/sync.sh
+    ```
+  - 如需运行官方参考校验器二次确认，可执行 `uvx --from skills-ref agentskills validate <skill目录路径>`。
+
+- [ ] **6. 汇报结果并等待 Git 授权**
+  - 向用户展示新建/修改的技能路径、核心要点及脱敏检查结果。
+  - **未经用户在当次对话明确要求，不自动执行 `git commit` 或 `git push`**。

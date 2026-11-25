@@ -1,0 +1,28 @@
+{
+  "$schema": "https://skills.sh/schemas/skills.sh.schema.json",
+  "notGrouped": "bottom",
+  "groupings": [
+    {
+      "title": "Meta",
+      "description": "元技能：经验提炼、Skill 开发规范与仓库自维护。",
+      "skills": [
+        "distill-skill"
+      ]
+    },
+    {
+      "title": "Work",
+      "description": "工程开发、代码规范、排障调试与自动化工作流。",
+      "skills": []
+    },
+    {
+      "title": "Study",
+      "description": "课程学习、论文研读、概念拆解与科研实验复现。",
+      "skills": []
+    },
+    {
+      "title": "Life",
+      "description": "个人效率、阅读思考、音乐创作与日常生活工作流。",
+      "skills": []
+    }
+  ]
+}
