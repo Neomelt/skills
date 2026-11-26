@@ -2,6 +2,16 @@
 
 本仓库记录个人 Agent Skills 的新增与重要演进，格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)。
 
+## [0.8.0] - 2026-11-26
+
+### Added
+
+- `skills/work/` 新增 [`pragmatic-engineering`](skills/work/pragmatic-engineering/SKILL.md)：吸收 20 年开源工程实战经验，涵盖恰如其分（Right-engineering）、破除教条式最佳实践、适度重复优于过早抽象、微型内部框架演化、和类型建模、理性性能优化以及 AI 协作下的心智模型守护（Sigh Coding）。
+
+### Changed
+
+- `root-cause-debug` 升级至 `0.2.0`：在阶段 1 取证与 [`references/tracing-patterns.md`](skills/work/root-cause-debug/references/tracing-patterns.md) 中新增“先排低成本傻瓜项（Easy Stuff First）”与“隔离单测 + 精准临时 `print` 调试”组合技。
+
 ## [0.7.0] - 2026-11-26
 
 ### Added
