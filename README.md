@@ -18,7 +18,9 @@
 |---|---|---|
 | `general/` | [`todo-board`](skills/general/todo-board/) | 个人看板任务跟踪：在较大任务动手前通过 `todo` CLI 查重认领或新建立项、同步进度与决策阻塞，并配合 `kanban-skip` 守门放行 |
 | `meta/` | [`distill-skill`](skills/meta/distill-skill/) | 经验提炼与归档元技能：把刚跑通的方案、排障记录或方法论提炼为标准 Skill，自动完成脱敏检查、索引联动与全主流 Agent 同步 |
-| `work/` | *持续沉淀中* | 软件工程、嵌入式 / Rust / Python / Web 开发规范、排障流程与自动化工具链 |
+| `work/` | [`root-cause-debug`](skills/work/root-cause-debug/) | 根因排障与验证闭环：先取证溯源再做最小根治修复，带 3 次失败架构熔断与实测证据验收 |
+| | [`git-workflow`](skills/work/git-workflow/) | Git 原子提交、Conventional Commits 规范、Merge 优先策略与宿主优先的 Worktree 隔离开发 |
+| | [`editorial-ui`](skills/work/editorial-ui/) | 克制前端设计与反 AI 模板味 UI 准则：先立 Token 契约再编码、主动规避模板黑名单并做视觉减法复核 |
 | `study/` | *持续沉淀中* | 课程复习、论文精读、概念拆解、实验复现与学术写作 |
 | `life/` | [`deep-reading`](skills/life/deep-reading/) | 深度共读与博客灵感捕手：陪做书籍/议题思辨碰撞，以 `读书/<书名>/` 分档 + 原生多色 Callout 静默归档独到洞察至 Obsidian Vault |
 

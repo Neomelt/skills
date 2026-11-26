@@ -19,7 +19,11 @@
     {
       "title": "Work",
       "description": "工程开发、代码规范、排障调试与自动化工作流。",
-      "skills": []
+      "skills": [
+        "root-cause-debug",
+        "git-workflow",
+        "editorial-ui"
+      ]
     },
     {
       "title": "Study",

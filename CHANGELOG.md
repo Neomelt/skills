@@ -2,6 +2,15 @@
 
 本仓库记录个人 Agent Skills 的新增与重要演进，格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)。
 
+## [0.7.0] - 2026-11-26
+
+### Added
+
+- `skills/work/` 新增三个高频软件开发工作流技能：
+  - [`root-cause-debug`](skills/work/root-cause-debug/SKILL.md)（附 [`references/tracing-patterns.md`](skills/work/root-cause-debug/references/tracing-patterns.md)）：四阶段根因排障、新鲜验证证据闭环与连续三次失败架构熔断机制。
+  - [`git-workflow`](skills/work/git-workflow/SKILL.md)：不可逆操作人工授权熔断、原子拆分提交与 Conventional Commits 规范、Merge 优先策略，以及兼顾宿主原生工具与 Worktrunk 的 Worktree 隔离开发流程。
+  - [`editorial-ui`](skills/work/editorial-ui/SKILL.md)：两阶段克制前端设计工作流、反 AI 模板味黑名单、Design Token 契约守护与视觉减法复核闭环。
+
 ## [0.6.0] - 2026-11-25
 
 ### Changed
